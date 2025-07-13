@@ -1,0 +1,82 @@
+.home-container {
+  text-align: center;
+  background-color: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.timer {
+  font-size: 4rem;
+  margin: 20px 0;
+  color: #444;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tag-chip {
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag-chip:not(.selected):not([disabled]):hover {
+  background-color: #e0e0e0;
+  border-color: #bbb;
+}
+
+.tag-chip.selected {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.add-tag-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px dashed #ccc;
+  background-color: #f0f0f0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.add-tag-btn:not([disabled]):hover {
+  background-color: #e0e0e0;
+  border-color: #aaa;
+}
+
+.controls button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.controls button:hover {
+  background-color: #0056b3;
+}
+
+.controls button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
