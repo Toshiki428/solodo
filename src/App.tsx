@@ -1,19 +1,13 @@
-import { useEffect } from 'react'
-import { db } from './db';
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
-  useEffect(() => {
-    db.tags.add({ name: 'TestTag' }).then(() => {
-      console.log('DB initialized and tag added!');
-    });
-  }, []);
-
   return (
-    <div>
-      <h1>SoloDo App</h1>
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route></Route>
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
