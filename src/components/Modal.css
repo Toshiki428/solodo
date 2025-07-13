@@ -59,3 +59,12 @@
 .modal-btn-cancel:hover {
   background-color: #5a6268;
 }
+
+.modal-btn-delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-btn-delete:hover {
+  background-color: #c82333;
+}

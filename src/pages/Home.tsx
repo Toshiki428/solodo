@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../db';
 import AddTagModal from '../components/AddTagModal';
+import DeleteTagModal from '../components/DeleteTagModal';
 import './Home.css';
 
 function Home() {
@@ -8,7 +9,9 @@ function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     db.tags.toArray().then(setTags);
@@ -35,10 +38,29 @@ function Home() {
   const handleAddTag = async (tagName: string) => {
     try {
       const newTag = { name: tagName };
-      await db.tags.add(newTag);
-      setTags(prev => [...prev, newTag]);
+      const id = await db.tags.add(newTag);
+      setTags(prev => [...prev, { ...newTag, id }]);
     } catch (error) {
       console.error('Failed to add tag:', error);
+    }
+  };
+
+  const openDeleteModal = (tagName: string) => {
+    setTagToDelete(tagName);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteTag = async () => {
+    if (!tagToDelete) return;
+    try {
+      const tagEntry = await db.tags.where('name').equals(tagToDelete).first();
+      if (tagEntry && tagEntry.id) {
+        await db.tags.delete(tagEntry.id);
+        setTags(prev => prev.filter(t => t.name !== tagToDelete));
+        setSelectedTags(prev => prev.filter(t => t !== tagToDelete));
+      }
+    } catch (error) {
+      console.error('Failed to delete tag:', error);
     }
   };
 
@@ -68,16 +90,23 @@ function Home() {
       </div>
       <div className="tags-container">
         {tags.map(tag => (
-          <button 
+          <div 
             key={tag.id} 
             className={`tag-chip ${selectedTags.includes(tag.name) ? 'selected' : ''}`}
             onClick={() => handleTagClick(tag.name)}
-            disabled={isRunning}
           >
-            {tag.name}
-          </button>
+            <span>{tag.name}</span>
+            <button 
+              className="delete-tag-btn" 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                openDeleteModal(tag.name); 
+              }} 
+              disabled={isRunning}
+            >×</button>
+          </div>
         ))}
-        <button className="add-tag-btn" onClick={() => setIsModalOpen(true)} disabled={isRunning}>+</button>
+        <button className="add-tag-btn" onClick={() => setIsAddModalOpen(true)} disabled={isRunning}>+</button>
       </div>
       <div className="controls">
         {!isRunning ? (
@@ -90,10 +119,17 @@ function Home() {
           </button>
         )}
       </div>
-      {isModalOpen && (
+      {isAddModalOpen && (
         <AddTagModal 
-          onClose={() => setIsModalOpen(false)} 
+          onClose={() => setIsAddModalOpen(false)} 
           onAddTag={handleAddTag} 
+        />
+      )}
+      {isDeleteModalOpen && tagToDelete && (
+        <DeleteTagModal
+          tagName={tagToDelete}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onDelete={handleDeleteTag}
         />
       )}
     </div>

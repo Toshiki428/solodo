@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './AddTagModal.css';
+import './Modal.css';
 
 interface Props {
   onClose: () => void;

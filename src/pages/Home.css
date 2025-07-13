@@ -30,6 +30,21 @@
   transition: all 0.2s;
 }
 
+.delete-tag-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.delete-tag-btn:hover {
+  color: #333;
+}
+
 .tag-chip:not(.selected):not([disabled]):hover {
   background-color: #e0e0e0;
   border-color: #bbb;
