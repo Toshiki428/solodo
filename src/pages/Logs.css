@@ -1,0 +1,14 @@
+.logs-container {
+  padding: 20px;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.log-list {
+  /* スタイルは後で追加 */
+}
