@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../db';
+import AddTagModal from '../components/AddTagModal';
 import './Home.css';
 
 function Home() {
@@ -7,6 +8,7 @@ function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     db.tags.toArray().then(setTags);
@@ -30,9 +32,14 @@ function Home() {
     );
   };
 
-  const handleAddTag = () => {
-    // TODO: 新規タグ作成モーダルなどを表示
-    console.log('Add new tag');
+  const handleAddTag = async (tagName: string) => {
+    try {
+      const newTag = { name: tagName };
+      await db.tags.add(newTag);
+      setTags(prev => [...prev, newTag]);
+    } catch (error) {
+      console.error('Failed to add tag:', error);
+    }
   };
 
   const handleStart = () => {
@@ -70,7 +77,7 @@ function Home() {
             {tag.name}
           </button>
         ))}
-        <button className="add-tag-btn" onClick={handleAddTag} disabled={isRunning}>+</button>
+        <button className="add-tag-btn" onClick={() => setIsModalOpen(true)} disabled={isRunning}>+</button>
       </div>
       <div className="controls">
         {!isRunning ? (
@@ -83,6 +90,12 @@ function Home() {
           </button>
         )}
       </div>
+      {isModalOpen && (
+        <AddTagModal 
+          onClose={() => setIsModalOpen(false)} 
+          onAddTag={handleAddTag} 
+        />
+      )}
     </div>
   );
 }
