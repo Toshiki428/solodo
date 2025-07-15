@@ -21,42 +21,57 @@ function Home() {
   const isRunning = mode === 'studying' || mode === 'break';
 
   const alarmSound = useRef(new Audio('/sounds/notification.mp3'));
+  const timerStartRef = useRef<Date | null>(null);
+  const hasPlayedRef = useRef(false);
 
   useEffect(() => {
     db.tags.toArray().then(setTags);
   }, []);
 
   useEffect(() => {
+    if (mode === 'studying' || mode === 'break') {
+      hasPlayedRef.current = false;
+    }
+  }, [mode]);
+
+  useEffect(() => {
     if (!isRunning) return;
 
-    // 時間が0になった時の処理
-    if (time === 0) {
-        alarmSound.current.play();
-        if (mode === 'break') {
-            // 休憩時間が終わったらアイドルモードに移行
-            setMode('idle');
-            setTime(STUDY_DURATION);
-            return; // このサイクルのインターバルは停止
-        }
+    // タイマー開始時刻が未設定ならセット
+    if (!timerStartRef.current) {
+      timerStartRef.current = new Date();
     }
 
-    // 勉強モードで時間がマイナスになった場合は、そのままカウントを続ける
-    if (time < 0 && mode === 'studying') {
-        // 何もせず、次のインターバルでマイナスカウントを継続
-    } else if (time <= 0 && mode === 'break') {
-        // 休憩が終わり、アイドル状態にリセット
+    const tick = () => {
+      if (!timerStartRef.current) return;
+      const now = new Date();
+      const elapsed = Math.floor((now.getTime() - timerStartRef.current.getTime()) / 1000);
+      let remaining = 0;
+      if (mode === 'studying') {
+        remaining = STUDY_DURATION - elapsed;
+      } else if (mode === 'break') {
+        remaining = BREAK_DURATION - elapsed;
+      }
+      setTime(remaining);
+
+      // 0になったらアラーム
+      if (remaining <= 0 && !hasPlayedRef.current) {
+        alarmSound.current.play();
+        hasPlayedRef.current = true;
+      }
+      // 休憩終了
+      if (remaining <= 0 && mode === 'break') {
         setMode('idle');
         setTime(STUDY_DURATION);
-        return; // インターバルを停止
-    }
+        timerStartRef.current = null;
+      }
+    };
 
-    // 1秒ごとに時間を減らす
-    const interval = window.setInterval(() => {
-        setTime((prevTime) => prevTime - 1);
-    }, 1000);
+    tick(); // 初回即時実行
+    const interval = setInterval(tick, 1000);
 
-    return () => window.clearInterval(interval);
-}, [isRunning, time, mode]);
+    return () => clearInterval(interval);
+  }, [isRunning, mode]);
 
   const handleTagClick = (tagName: string) => {
     if (isRunning) return; // Prevent tag selection while timer is running
@@ -104,18 +119,24 @@ function Home() {
   };
 
   const handleStart = () => {
+    timerStartRef.current = new Date();
+    setTime(STUDY_DURATION);
     setMode('studying');
   };
 
   const handleStop = async () => {
-    const studiedTime = STUDY_DURATION - time;
+    // 残り時間から経過時間を計算
+    const now = new Date();
+    let studiedTime = 0;
+    if (timerStartRef.current) {
+      studiedTime = Math.floor((now.getTime() - timerStartRef.current.getTime()) / 1000);
+    }
 
     try {
       const tagEntries = await db.tags.where('name').anyOf(selectedTags).toArray();
       const tagIds = tagEntries.map(t => t.id).filter(id => id !== undefined) as number[];
 
-      const now = new Date();
-      const startTime = new Date(now.getTime() - studiedTime * 1000);
+      const startTime = timerStartRef.current ? timerStartRef.current : new Date(now.getTime() - studiedTime * 1000);
 
       if (studiedTime > 0) { // Only save if time has passed
         await db.studyLogs.add({
@@ -130,6 +151,7 @@ function Home() {
       // Transition to break
       setMode('break');
       setTime(BREAK_DURATION);
+      timerStartRef.current = new Date();
       setSelectedTags([]);
     } catch (error) {
       console.error('Failed to save study log:', error);
