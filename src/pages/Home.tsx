@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db } from '../db';
 import AddTagModal from '../components/AddTagModal';
 import DeleteTagModal from '../components/DeleteTagModal';
@@ -20,6 +20,8 @@ function Home() {
 
   const isRunning = mode === 'studying' || mode === 'break';
 
+  const alarmSound = useRef(new Audio('/sounds/notification.mp3'));
+
   useEffect(() => {
     db.tags.toArray().then(setTags);
   }, []);
@@ -27,22 +29,34 @@ function Home() {
   useEffect(() => {
     if (!isRunning) return;
 
-    // Handle timer completion
-    if (time < 0 && mode === 'studying') {
-      // In study mode, just let it count into overtime
-    } else if (time <= 0 && mode === 'break') {
-      // When break is over, reset to idle study mode
-      setMode('idle');
-      setTime(STUDY_DURATION);
-      return; // Stop the interval for this cycle
+    // 時間が0になった時の処理
+    if (time === 0) {
+        alarmSound.current.play();
+        if (mode === 'break') {
+            // 休憩時間が終わったらアイドルモードに移行
+            setMode('idle');
+            setTime(STUDY_DURATION);
+            return; // このサイクルのインターバルは停止
+        }
     }
 
+    // 勉強モードで時間がマイナスになった場合は、そのままカウントを続ける
+    if (time < 0 && mode === 'studying') {
+        // 何もせず、次のインターバルでマイナスカウントを継続
+    } else if (time <= 0 && mode === 'break') {
+        // 休憩が終わり、アイドル状態にリセット
+        setMode('idle');
+        setTime(STUDY_DURATION);
+        return; // インターバルを停止
+    }
+
+    // 1秒ごとに時間を減らす
     const interval = window.setInterval(() => {
-      setTime((prevTime) => prevTime - 1);
+        setTime((prevTime) => prevTime - 1);
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, [isRunning, time, mode]);
+}, [isRunning, time, mode]);
 
   const handleTagClick = (tagName: string) => {
     if (isRunning) return; // Prevent tag selection while timer is running
