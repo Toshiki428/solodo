@@ -76,6 +76,13 @@ function Home() {
         await db.tags.delete(tagEntry.id);
         setTags(prev => prev.filter(t => t.name !== tagToDelete));
         setSelectedTags(prev => prev.filter(t => t !== tagToDelete));
+
+        // タグを消した際、studyLogsのタグを取り除く
+        const studyLogsToUpdate = await db.studyLogs.where('tagIds').anyOf(tagEntry.id).toArray();
+        for (const log of studyLogsToUpdate) {
+          const updatedTagIds = log.tagIds.filter(id => id !== tagEntry.id);
+          await db.studyLogs.update(log.id!, { tagIds: updatedTagIds });
+        }
       }
     } catch (error) {
       console.error('Failed to delete tag:', error);

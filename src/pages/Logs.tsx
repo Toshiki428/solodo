@@ -61,7 +61,7 @@ const Logs: React.FC = () => {
             <div key={log.id} className="log-item">
               <p>開始: {log.startTime.toLocaleString()}</p>
               <p>時間: {log.endTime ? formatDuration(log.startTime, log.endTime) : '進行中'}</p>
-              <p>タグ: {log.tagIds.map(id => getTagName(id)).join(', ')}</p>
+              <p>タグ: {log.tagIds.length > 0 ? log.tagIds.map(id => getTagName(id)).join(', ') : '-'}</p>
               {log.memo && <p>メモ: {log.memo}</p>}
             </div>
           ))
