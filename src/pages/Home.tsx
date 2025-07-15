@@ -153,9 +153,9 @@ function Home() {
       </div>
       <div className="tags-container">
         {tags.map(tag => (
-          <div 
-            key={tag.id} 
-            className={`tag-chip ${selectedTags.includes(tag.name) ? 'selected' : ''}`}
+          <div
+            key={tag.id}
+            className={`tag-chip ${selectedTags.includes(tag.name) ? 'selected' : ''} ${isRunning ? 'disabled' : ''}`}
             onClick={() => handleTagClick(tag.name)}
           >
             <span>{tag.name}</span>
