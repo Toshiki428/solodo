@@ -137,7 +137,7 @@ function Home() {
   const renderControlButton = () => {
     switch (mode) {
       case 'idle':
-        return <button onClick={handleStart} disabled={selectedTags.length === 0}>勉強開始</button>;
+        return <button onClick={handleStart}>勉強開始</button>;
       case 'studying':
         return <button onClick={handleStop}>勉強終了</button>;
       case 'break':
