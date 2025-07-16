@@ -6,6 +6,7 @@ const BottomNav = () => {
     <nav className="bottom-nav">
       <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>タイマー</NavLink>
       <NavLink to="/logs" className={({ isActive }) => isActive ? 'active' : ''}>履歴</NavLink>
+      <NavLink to="/statistics" className={({ isActive }) => isActive ? 'active' : ''}>分析</NavLink>
     </nav>
   );
 };
