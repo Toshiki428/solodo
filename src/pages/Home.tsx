@@ -24,9 +24,40 @@ function Home() {
   const timerStartRef = useRef<Date | null>(null);
   const hasPlayedRef = useRef(false);
 
+  // 初回マウント時にタグを取得
   useEffect(() => {
     db.tags.toArray().then(setTags);
   }, []);
+
+  // 初回マウント時にローカルストレージからタイマー状態を取得
+  useEffect(() => {
+    const savedMode = localStorage.getItem('solodo-timer-mode') as Mode | null;
+    const savedStartTime = localStorage.getItem('solodo-timer-start');
+    const savedTags = localStorage.getItem('solodo-timer-tags');
+
+    if (savedMode && savedStartTime) {
+      setMode(savedMode);
+      timerStartRef.current = new Date(savedStartTime);
+      if (savedTags) {
+        setSelectedTags(JSON.parse(savedTags));
+      }
+    }
+  }, []);
+
+  // タイマーの状態が変わるたびにローカルストレージを更新
+  useEffect(() => {
+    if (isRunning && timerStartRef.current) {
+      localStorage.setItem('solodo-timer-mode', mode);
+      localStorage.setItem('solodo-timer-start', timerStartRef.current.toISOString());
+      localStorage.setItem('solodo-timer-tags', JSON.stringify(selectedTags));
+    } else {
+      // タイマーがアイドル状態のときはローカルストレージをクリア
+      localStorage.removeItem('solodo-timer-mode');
+      localStorage.removeItem('solodo-timer-start');
+      localStorage.removeItem('solodo-timer-tags');
+    }
+  }, [mode, isRunning, selectedTags]);
+
 
   useEffect(() => {
     if (mode === 'studying' || mode === 'break') {
