@@ -1,69 +1,54 @@
-# React + TypeScript + Vite
+# SoloDo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ひとりに最適化されたポモドーロ・タイマー付き学習ログアプリ
 
-Currently, two official plugins are available:
+## 概要
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+SoloDoは、ポモドーロ・テクニックに基づいたタイマーと学習ログの記録を組み合わせた、  
+ひとり学習のためのシンプルな支援アプリです。
 
-## Expanding the ESLint configuration
+- 学習時間の記録と振り返り
+- 休憩を挟みながら集中力を維持
+- タグ管理で学習の傾向を可視化
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## アプリURL
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+[https://solodo.vercel.app](https://solodo.vercel.app)
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## スクリーンショット
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+![スクショ](./docs//screenshot.png)
+
+## 主な機能
+
+- ポモドーロ学習タイマー（25分学習 + 5分休憩）
+- ログの自動保存（日時・タグ付き）
+- タイマーの継続（リロード・画面遷移しても持続）
+- タイマー終了時の通知音
+- タグ選択による学習内容の分類
+
+## 使用技術
+
+- React (Vite)
+- TypeScript
+- localStorage / React Context
+- Vercel (Hosting)
+
+## ローカルでのセットアップ方法
+
+```bash
+git clone https://github.com/yourname/solodo.git
+cd solodo
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 今後のアップデート予定
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- 学習統計の可視化
+- ログの編集機能
+- クラウド同期
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 作者情報
+
+- [Xアカウント](https://x.com/toshiki_sec)
