@@ -10,6 +10,7 @@ const Logs: React.FC = () => {
   const [logToDelete, setLogToDelete] = useState<number | undefined>(undefined);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchLogsAndTags = async () => {
@@ -22,6 +23,12 @@ const Logs: React.FC = () => {
 
     fetchLogsAndTags();
   }, []);
+
+  const handleTagFilterChange = (tagId: number) => {
+    setSelectedTagIds(prev => 
+      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
+    );
+  };
 
   const filteredLogs = useMemo(() => {
     let effectiveStartDate: Date | null = null;
@@ -54,11 +61,20 @@ const Logs: React.FC = () => {
 
     return allStudyLogs.filter(log => {
       const logDate = new Date(log.startTime);
+      // 日付フィルター
       if (effectiveStartDate && logDate < effectiveStartDate) return false;
       if (effectiveEndDate && logDate > effectiveEndDate) return false;
+
+      // タグフィルター
+      if (selectedTagIds.length > 0) {
+        // 選択されたすべてのタグIDがログのタグIDに含まれているか
+        const hasAllSelectedTags = selectedTagIds.every(selectedTagId => log.tagIds.includes(selectedTagId));
+        if (!hasAllSelectedTags) return false;
+      }
+
       return true;
     });
-  }, [allStudyLogs, startDate, endDate]);
+  }, [allStudyLogs, startDate, endDate, selectedTagIds]);
 
   const openConfirmationModal = (id: number | undefined) => {
     setLogToDelete(id);
@@ -106,16 +122,28 @@ const Logs: React.FC = () => {
 
   return (
     <div className="logs-container">
-      <h1>勉強ログ</h1>
-      <div className="filter-section">
-        <div className="date-filter">
-          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
-          <span>〜</span>
-          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
+      <div className="logs-header">
+        <h1>勉強ログ</h1>
+        <div className="filter-section">
+          <h3>日付フィルター</h3>
+          <div className="date-filter">
+            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
+            <span>〜</span>
+            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
+          </div>
+          <h3>タグフィルター</h3>
+          <div className="tag-filter-chips">
+            {tags.map(tag => (
+              <div
+                key={tag.id}
+                className={`tag-chip ${selectedTagIds.includes(tag.id!) ? 'selected' : ''}`}
+                onClick={() => handleTagFilterChange(tag.id!)}
+              >
+                <span>{tag.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="filter-section">
-        <p>タグフィルター</p>
       </div>
       <div className="log-list">
         {filteredLogs.length === 0 ? (
