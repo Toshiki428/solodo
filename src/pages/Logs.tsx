@@ -24,18 +24,38 @@ const Logs: React.FC = () => {
   }, []);
 
   const filteredLogs = useMemo(() => {
+    let effectiveStartDate: Date | null = null;
+    let effectiveEndDate: Date | null = null;
+
+    const parsedStartDate = startDate ? new Date(startDate) : null;
+    const parsedEndDate = endDate ? new Date(endDate) : null;
+
+    if (parsedStartDate && parsedEndDate) {
+      if (parsedStartDate <= parsedEndDate) {
+        effectiveStartDate = parsedStartDate;
+        effectiveEndDate = parsedEndDate;
+      } else {
+        // 順序が逆転している場合、入れ替える
+        effectiveStartDate = parsedEndDate;
+        effectiveEndDate = parsedStartDate;
+      }
+    } else if (parsedStartDate) {
+      effectiveStartDate = parsedStartDate;
+    } else if (parsedEndDate) {
+      effectiveEndDate = parsedEndDate;
+    }
+
+    if (effectiveStartDate) {
+      effectiveStartDate.setHours(0, 0, 0, 0);
+    }
+    if (effectiveEndDate) {
+      effectiveEndDate.setHours(23, 59, 59, 999);
+    }
+
     return allStudyLogs.filter(log => {
       const logDate = new Date(log.startTime);
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0); // その日の始まり
-        if (logDate < start) return false;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // その日の終わり
-        if (logDate > end) return false;
-      }
+      if (effectiveStartDate && logDate < effectiveStartDate) return false;
+      if (effectiveEndDate && logDate > effectiveEndDate) return false;
       return true;
     });
   }, [allStudyLogs, startDate, endDate]);
