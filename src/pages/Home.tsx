@@ -9,7 +9,7 @@ import './Home.css';
 function Home() {
   const { remaining, elapsed, timerStartRef, mode, isRunning, start, stop } = useTimer();
   const [tags, setTags] = useState<{ id?: number; name: string }[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = usePersistentState<string[]>('solodo-tags', []);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
