@@ -1,108 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { useTimer } from '../contexts/TimerContext';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { db } from '../db';
 import AddTagModal from '../components/AddTagModal';
 import DeleteTagModal from '../components/DeleteTagModal';
 import './Home.css';
 
-const STUDY_DURATION = 25 * 60; // 25 minutes
-const BREAK_DURATION = 5 * 60;  // 5 minutes
-
-type Mode = 'idle' | 'studying' | 'break';
-
 function Home() {
+  const { remaining, elapsed, timerStartRef, mode, isRunning, start, stop } = useTimer();
   const [tags, setTags] = useState<{ id?: number; name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [time, setTime] = useState<number>(STUDY_DURATION);
-  const [mode, setMode] = useState<Mode>('idle');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
-
-  const isRunning = mode === 'studying' || mode === 'break';
-
-  const alarmSound = useRef(new Audio('/sounds/notification.mp3'));
-  const timerStartRef = useRef<Date | null>(null);
-  const hasPlayedRef = useRef(false);
 
   // 初回マウント時にタグを取得
   useEffect(() => {
     db.tags.toArray().then(setTags);
   }, []);
-
-  // 初回マウント時にローカルストレージからタイマー状態を取得
-  useEffect(() => {
-    const savedMode = localStorage.getItem('solodo-timer-mode') as Mode | null;
-    const savedStartTime = localStorage.getItem('solodo-timer-start');
-    const savedTags = localStorage.getItem('solodo-timer-tags');
-
-    if (savedMode && savedStartTime) {
-      setMode(savedMode);
-      timerStartRef.current = new Date(savedStartTime);
-      if (savedTags) {
-        setSelectedTags(JSON.parse(savedTags));
-      }
-    }
-  }, []);
-
-  // タイマーの状態が変わるたびにローカルストレージを更新
-  useEffect(() => {
-    if (isRunning && timerStartRef.current) {
-      localStorage.setItem('solodo-timer-mode', mode);
-      localStorage.setItem('solodo-timer-start', timerStartRef.current.toISOString());
-      localStorage.setItem('solodo-timer-tags', JSON.stringify(selectedTags));
-    } else {
-      // タイマーがアイドル状態のときはローカルストレージをクリア
-      localStorage.removeItem('solodo-timer-mode');
-      localStorage.removeItem('solodo-timer-start');
-      localStorage.removeItem('solodo-timer-tags');
-    }
-  }, [mode, isRunning, selectedTags]);
-
-
-  useEffect(() => {
-    if (mode === 'studying' || mode === 'break') {
-      hasPlayedRef.current = false;
-    }
-  }, [mode]);
-
-  useEffect(() => {
-    if (!isRunning) return;
-
-    // タイマー開始時刻が未設定ならセット
-    if (!timerStartRef.current) {
-      timerStartRef.current = new Date();
-    }
-
-    const tick = () => {
-      if (!timerStartRef.current) return;
-      const now = new Date();
-      const elapsed = Math.floor((now.getTime() - timerStartRef.current.getTime()) / 1000);
-      let remaining = 0;
-      if (mode === 'studying') {
-        remaining = STUDY_DURATION - elapsed;
-      } else if (mode === 'break') {
-        remaining = BREAK_DURATION - elapsed;
-      }
-      setTime(remaining);
-
-      // 0になったらアラーム
-      if (remaining <= 0 && !hasPlayedRef.current) {
-        alarmSound.current.play();
-        hasPlayedRef.current = true;
-      }
-      // 休憩終了
-      if (remaining <= 0 && mode === 'break') {
-        setMode('idle');
-        setTime(STUDY_DURATION);
-        timerStartRef.current = null;
-      }
-    };
-
-    tick(); // 初回即時実行
-    const interval = setInterval(tick, 1000);
-
-    return () => clearInterval(interval);
-  }, [isRunning, mode]);
 
   const handleTagClick = (tagName: string) => {
     if (isRunning) return; // Prevent tag selection while timer is running
@@ -150,39 +65,28 @@ function Home() {
   };
 
   const handleStart = () => {
-    timerStartRef.current = new Date();
-    setTime(STUDY_DURATION);
-    setMode('studying');
+    start();
   };
 
   const handleStop = async () => {
-    // 残り時間から経過時間を計算
-    const now = new Date();
-    let studiedTime = 0;
-    if (timerStartRef.current) {
-      studiedTime = Math.floor((now.getTime() - timerStartRef.current.getTime()) / 1000);
-    }
-
     try {
       const tagEntries = await db.tags.where('name').anyOf(selectedTags).toArray();
       const tagIds = tagEntries.map(t => t.id).filter(id => id !== undefined) as number[];
 
-      const startTime = timerStartRef.current ? timerStartRef.current : new Date(now.getTime() - studiedTime * 1000);
+      const now = new Date();
+      const startTime = timerStartRef ? timerStartRef : new Date(now.getTime() - elapsed * 1000);
 
-      if (studiedTime > 0) { // Only save if time has passed
+      if (elapsed > 0) { // Only save if time has passed
         await db.studyLogs.add({
           startTime: startTime,
           endTime: now,
           tagIds: tagIds,
           memo: null
         });
-        console.log(`Studied for ${studiedTime} seconds with tags: ${selectedTags.join(', ')}`);
+        console.log(`Studied for ${elapsed} seconds with tags: ${selectedTags.join(', ')}`);
       }
 
-      // Transition to break
-      setMode('break');
-      setTime(BREAK_DURATION);
-      timerStartRef.current = new Date();
+      stop();
       setSelectedTags([]);
     } catch (error) {
       console.error('Failed to save study log:', error);
@@ -216,7 +120,7 @@ function Home() {
     <div className="home-container">
       <h1>SoloDo</h1>
       <div className={`timer ${mode === 'break' ? 'break-mode' : ''}`}>
-        {formatTime(time)}
+        {formatTime(remaining)}
       </div>
       <div className="tags-container">
         {tags.map(tag => (
