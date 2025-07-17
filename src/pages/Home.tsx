@@ -7,7 +7,7 @@ import DeleteTagModal from '../components/DeleteTagModal';
 import './Home.css';
 
 function Home() {
-  const { remaining, elapsed, timerStartRef, mode, isRunning, start, stop } = useTimer();
+  const { remaining, elapsed, timerStartRef, mode, isRunning, start, stop, reset } = useTimer();
   const [tags, setTags] = useState<{ id?: number; name: string }[]>([]);
   const [selectedTags, setSelectedTags] = usePersistentState<string[]>('solodo-tags', []);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -93,6 +93,10 @@ function Home() {
     }
   };
 
+  const handleEndBreak = () => {
+    reset();
+  };
+
   const formatTime = (seconds: number) => {
     const isOvertime = seconds < 0;
     const absSeconds = Math.abs(seconds);
@@ -112,7 +116,7 @@ function Home() {
       case 'studying':
         return <button onClick={handleStop}>勉強終了</button>;
       case 'break':
-        return <button disabled>休憩中</button>;
+        return <button onClick={handleEndBreak}>休憩終了</button>;
     }
   }
 
