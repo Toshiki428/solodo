@@ -3,7 +3,7 @@ import { useTimer } from '../contexts/TimerContext';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { db } from '../db';
 import AddTagModal from '../components/AddTagModal';
-import DeleteTagModal from '../components/DeleteTagModal';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import './Home.css';
 
 function Home() {
@@ -55,8 +55,9 @@ function Home() {
         // タグを消した際、studyLogsのタグを取り除く
         const studyLogsToUpdate = await db.studyLogs.where('tagIds').anyOf(tagEntry.id).toArray();
         for (const log of studyLogsToUpdate) {
+          if (log.id === undefined) continue;
           const updatedTagIds = log.tagIds.filter(id => id !== tagEntry.id);
-          await db.studyLogs.update(log.id!, { tagIds: updatedTagIds });
+          await db.studyLogs.update(log.id, { tagIds: updatedTagIds });
         }
       }
     } catch (error) {
@@ -155,13 +156,14 @@ function Home() {
           onAddTag={handleAddTag} 
         />
       )}
-      {isDeleteModalOpen && tagToDelete && (
-        <DeleteTagModal
-          tagName={tagToDelete}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onDelete={handleDeleteTag}
-        />
-      )}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteTag}
+        title="タグの削除"
+        message1={`本当に「${tagToDelete}」を削除しますか？`}
+        message2={`関連する勉強ログからこのタグは削除されます。`}
+      />
     </div>
   );
 }

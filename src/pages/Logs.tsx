@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import './Logs.css';
 import { db, type StudyLog, type Tag } from '../db';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const Logs: React.FC = () => {
   const [studyLogs, setStudyLogs] = useState<StudyLog[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const fetchLogsAndTags = async () => {
@@ -16,6 +19,22 @@ const Logs: React.FC = () => {
 
     fetchLogsAndTags();
   }, []);
+
+  const openConfirmationModal = (id: number | undefined) => {
+    setLogToDelete(id);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteLog = async () => {
+    if (logToDelete === undefined) return;
+
+    try {
+      await db.studyLogs.delete(logToDelete);
+      setStudyLogs(prevLogs => prevLogs.filter(log => log.id !== logToDelete));
+    } catch (error) {
+      console.error('Failed to delete log:', error);
+    }
+  };
 
   const getTagName = (tagId: number) => {
     const tag = tags.find(t => t.id === tagId);
@@ -59,14 +78,25 @@ const Logs: React.FC = () => {
         ) : (
           studyLogs.map((log) => (
             <div key={log.id} className="log-item">
-              <p>開始: {log.startTime.toLocaleString()}</p>
-              <p>時間: {log.endTime ? formatDuration(log.startTime, log.endTime) : '進行中'}</p>
-              <p>タグ: {log.tagIds.length > 0 ? log.tagIds.map(id => getTagName(id)).join(', ') : '-'}</p>
-              {log.memo && <p>メモ: {log.memo}</p>}
+              <div className="log-details">
+                <p>開始: {log.startTime.toLocaleString()}</p>
+                <p>時間: {log.endTime ? formatDuration(log.startTime, log.endTime) : '進行中'}</p>
+                <p>タグ: {log.tagIds.length > 0 ? log.tagIds.map(id => getTagName(id)).join(', ') : '-'}</p>
+                {log.memo && <p>メモ: {log.memo}</p>}
+              </div>
+              <button onClick={() => openConfirmationModal(log.id)} className="delete-log-btn">×</button>
             </div>
           ))
         )}
       </div>
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleDeleteLog}
+        title="ログの削除"
+        message1="本当にこの勉強ログを削除しますか？"
+        message2="この操作は元に戻せません。"
+      />
     </div>
   );
 };
