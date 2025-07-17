@@ -10,6 +10,12 @@
   border-radius: 8px;
 }
 
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .log-list {
   display: grid;
   gap: 15px;
